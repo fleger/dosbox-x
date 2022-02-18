@@ -5802,7 +5802,7 @@ Table            [Programmable key setting data buffer structure]
                 /* VF1-VF5 */
                 for (unsigned int f=0;f < 5;f++,ofs += 16)
                     INTDC_STORE_FUNCDEC(ofs,pc98_vfunc_key_ctrl[f]);
- 
+
                 goto done;
             }
             goto unknown;
@@ -12778,9 +12778,6 @@ void ROMBIOS_Init() {
     }
 }
 
-//! \brief Updates the state of a lockable key.
-void UpdateKeyWithLed(int nVirtKey, int flagAct, int flagLed);
-
 bool IsSafeToMemIOOnBehalfOfGuest()
 {
     if(cpu.pmode) return false; // protected mode (including virtual 8086 mode): NO
@@ -12788,40 +12785,15 @@ bool IsSafeToMemIOOnBehalfOfGuest()
     return true;
 }
 
-void BIOS_SynchronizeNumLock()
-{
-#if defined(WIN32)
-	UpdateKeyWithLed(VK_NUMLOCK, BIOS_KEYBOARD_FLAGS1_NUMLOCK_ACTIVE, BIOS_KEYBOARD_LEDS_NUM_LOCK);
-#endif
-}
-
-void BIOS_SynchronizeCapsLock()
-{
-#if defined(WIN32)
-	UpdateKeyWithLed(VK_CAPITAL, BIOS_KEYBOARD_FLAGS1_CAPS_LOCK_ACTIVE, BIOS_KEYBOARD_LEDS_CAPS_LOCK);
-#endif
-}
-
-void BIOS_SynchronizeScrollLock()
-{
-#if defined(WIN32)
-	UpdateKeyWithLed(VK_SCROLL, BIOS_KEYBOARD_FLAGS1_SCROLL_LOCK_ACTIVE, BIOS_KEYBOARD_LEDS_SCROLL_LOCK);
-#endif
-}
-
-void UpdateKeyWithLed(int nVirtKey, int flagAct, int flagLed)
-{
-#if defined(WIN32)
-
-	const auto state = GetKeyState(nVirtKey);
-
+//! \brief Updates the state of a lockable key.
+void UpdateLockableKey(int flagAct, int flagLed, bool enabled) {
 	const auto flags1 = BIOS_KEYBOARD_FLAGS1;
 	const auto flags2 = BIOS_KEYBOARD_LEDS;
 
 	auto flag1 = mem_readb(flags1);
 	auto flag2 = mem_readb(flags2);
 
-	if (state & 1)
+	if (enabled)
 	{
 		flag1 |= flagAct;
 		flag2 |= flagLed;
@@ -12834,13 +12806,20 @@ void UpdateKeyWithLed(int nVirtKey, int flagAct, int flagLed)
 
 	mem_writeb(flags1, flag1);
 	mem_writeb(flags2, flag2);
+}
 
-#else
+void BIOS_UpdateNumLock(bool enabled)
+{
+    UpdateLockableKey(BIOS_KEYBOARD_FLAGS1_NUMLOCK_ACTIVE, BIOS_KEYBOARD_LEDS_NUM_LOCK, enabled);
+}
 
-    (void)nVirtKey;
-    (void)flagAct;
-    (void)flagLed;
+void BIOS_UpdateCapsLock(bool enabled)
+{
+    UpdateLockableKey(BIOS_KEYBOARD_FLAGS1_CAPS_LOCK_ACTIVE, BIOS_KEYBOARD_LEDS_CAPS_LOCK, enabled);
+}
 
-#endif
+void BIOS_UpdateScrollLock(bool enabled)
+{
+    UpdateLockableKey(BIOS_KEYBOARD_FLAGS1_SCROLL_LOCK_ACTIVE, BIOS_KEYBOARD_LEDS_SCROLL_LOCK, enabled);
 }
 

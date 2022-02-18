@@ -258,14 +258,14 @@ void BIOS_SetLPTPort (Bitu port, uint16_t baseaddr);
 // because the BIOS data area addresses are invalid pages in that 32-bit environment!
 bool IsSafeToMemIOOnBehalfOfGuest();
 
-// \brief Synchronizes emulator num lock state with host.
-void BIOS_SynchronizeNumLock();
+// \brief Update emulator num lock state.
+void BIOS_UpdateNumLock(bool enabled);
 
-// \brief Synchronizes emulator caps lock state with host.
-void BIOS_SynchronizeCapsLock();
+// \brief Update emulator caps lock state.
+void BIOS_UpdateCapsLock(bool enabled);
 
-// \brief Synchronizes emulator scroll lock state with host.
-void BIOS_SynchronizeScrollLock();
+// \brief Update emulator scroll lock state.
+void BIOS_UpdateScrollLock(bool enabled);
 
 bool ISAPNP_RegisterSysDev(const unsigned char *raw,Bitu len,bool already=false);
 

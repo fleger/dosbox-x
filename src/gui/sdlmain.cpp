@@ -5434,6 +5434,10 @@ bool gfx_in_mapper = false;
 #define DB_POLLSKIP 1
 #endif
 
+int CheckNumLockState(bool* state);
+int CheckCapsLockState(bool* state);
+int CheckScrollLockState(bool* state);
+
 void GFX_Events() {
     CheckMapperKeyboardLayout();
 #if defined(C_SDL2) /* SDL 2.x---------------------------------- */
@@ -5597,6 +5601,15 @@ void GFX_Events() {
                     GFX_CaptureMouse();
                 SetPriority(sdl.priority.focus);
                 CPU_Disable_SkipAutoAdjust();
+                if (strcmp(RunningProgram, "LOADLIN")) {
+                    bool state;
+                    if(CheckNumLockState(&state) == 0)
+                        BIOS_UpdateNumLock(state);
+                    if(CheckCapsLockState(&state) == 0)
+                        BIOS_UpdateCapsLock(state);
+                    if(CheckScrollLockState(&state) == 0)
+                        BIOS_UpdateScrollLock(state);
+                }
 #if defined(USE_TTF)
                 resetFontSize();
 #endif
@@ -6024,9 +6037,13 @@ void GFX_Events() {
                         SetPriority(sdl.priority.focus);
                         CPU_Disable_SkipAutoAdjust();
                         if (strcmp(RunningProgram, "LOADLIN") && IsSafeToMemIOOnBehalfOfGuest()) {
-                            BIOS_SynchronizeNumLock();
-                            BIOS_SynchronizeCapsLock();
-                            BIOS_SynchronizeScrollLock();
+                            bool state;
+                            if(CheckNumLockState(&state) == 0)
+                                BIOS_UpdateNumLock(state);
+                            if(CheckCapsLockState(&state) == 0)
+                                BIOS_UpdateCapsLock(state);
+                            if(CheckScrollLockState(&state) == 0)
+                                BIOS_UpdateScrollLock(state);
                         }
                     } else {
                         if (sdl.mouse.locked)
@@ -6785,49 +6802,110 @@ static void erasemapperfile() {
     exit(0);
 }
 
+#if defined(LINUX) && C_X11
+# include <X11/Xlib.h>
+# include <X11/Xatom.h>
+# include "SDL_syswm.h"
+#endif
+
+#if defined(LINUX) && C_X11 && defined(C_X11_XKB)
+#include <X11/XKBlib.h>
+#include <X11/keysym.h>
+
+int CheckXkb(Display *dpy) {
+  int xkb_opcode, xkb_event, xkb_error;
+  int xkb_lmaj = XkbMajorVersion;
+  int xkb_lmin = XkbMinorVersion;
+  return XkbLibraryVersion(&xkb_lmaj, &xkb_lmin)
+      && XkbQueryExtension(dpy, &xkb_opcode, &xkb_event, &xkb_error,
+            &xkb_lmaj, &xkb_lmin);
+}
+#endif
+
 void SetNumLock(void) {
-#ifdef WIN32
     if (control->opt_disable_numlock_check)
         return;
-
+#ifdef WIN32
     // Simulate a key press
     keybd_event(VK_NUMLOCK,0x45,KEYEVENTF_EXTENDEDKEY | 0,0);
 
     // Simulate a key release
     keybd_event(VK_NUMLOCK,0x45,KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
+#elif defined(LINUX) && C_X11 && defined(C_X11_XKB)
+    unsigned int mask;
+    Display *dpy = XOpenDisplay(NULL);
+    if (!dpy) return;
+    if (!CheckXkb(dpy)) return;
+    mask = XkbKeysymToModifiers(dpy, XK_Num_Lock);
+    if (!mask) return;
+    XkbStateRec xkbState;
+    XkbGetState(dpy, XkbUseCoreKbd, &xkbState);
+    // Toggle led state on host
+    XkbLockModifiers(dpy, XkbUseCoreKbd, mask, (xkbState.locked_mods & mask) ? 0 : mask);
+    XFlush(dpy);
+    // Update BIOS state
+    BIOS_UpdateNumLock((xkbState.locked_mods & mask) ? False : True);
 #endif
 }
 
-void CheckNumLockState(void) {
 #ifdef WIN32
+int CheckKeyLockState(bool* state, BYTE key) {
     BYTE keyState[256];
 
     GetKeyboardState((LPBYTE)(&keyState));
-    if (keyState[VK_NUMLOCK] & 1) {
-        startup_state_numlock = true;
+    if (keyState[key] & 1) {
+        *state = true;
+    } else {
+        *state = false;
     }
+    return 0;
+}
+#elif defined(LINUX) && C_X11 && defined(C_X11_XKB)
+int CheckKeyLockState(bool* state, XID key) {
+    unsigned int mask;
+    Display *dpy = XOpenDisplay(NULL);
+    if (!dpy) return -1;
+    if (!CheckXkb(dpy)) return -1;
+    mask = XkbKeysymToModifiers(dpy, key);
+    if (!mask) return -1;
+    XkbStateRec xkbState;
+    XkbGetState(dpy, XkbUseCoreKbd, &xkbState);
+    if (xkbState.locked_mods & mask) {
+        *state = true;
+    } else {
+        *state = false;
+    }
+    return 0;
+}
+#endif
+
+int CheckNumLockState(bool* state) {
+#ifdef WIN32
+    return CheckKeyLockState(state, VK_NUMLOCK);
+#elif defined(LINUX) && C_X11 && defined(C_X11_XKB)
+    return CheckKeyLockState(state, XK_Num_Lock);
+#else
+    return -1;
 #endif
 }
 
-void CheckCapsLockState(void) {
+int CheckCapsLockState(bool* state) {
 #ifdef WIN32
-    BYTE keyState[256];
-
-    GetKeyboardState((LPBYTE)(&keyState));
-    if (keyState[VK_CAPITAL] & 1) {
-        startup_state_capslock = true;
-    }
+    return CheckKeyLockState(state, VK_CAPITAL);
+#elif defined(LINUX) && C_X11 && defined(C_X11_XKB)
+    return CheckKeyLockState(state, XK_Caps_Lock);
+#else
+    return -1;
 #endif
 }
 
-void CheckScrollLockState(void) {
+int CheckScrollLockState(bool* state) {
 #ifdef WIN32
-    BYTE keyState[256];
-
-    GetKeyboardState((LPBYTE)(&keyState));
-    if (keyState[VK_SCROLL] & 1) {
-        startup_state_scrlock = true;
-    }
+    return CheckKeyLockState(state, VK_SCROLL);
+#elif defined(LINUX) && C_X11 && defined(C_X11_XKB)
+    return CheckKeyLockState(state, XK_Scroll_Lock);
+#else
+    return -1;
 #endif
 }
 
@@ -6943,8 +7021,8 @@ bool DOSBOX_parse_argv() {
             fprintf(stderr,"  -defaultdir <path>                      Set the default working path for DOSBox-X\n");
             fprintf(stderr,"  -defaultconf                            Use the default config settings for DOSBox-X\n");
             fprintf(stderr,"  -defaultmapper                          Use the default key mappings for DOSBox-X\n");
-#if defined(WIN32)
-            fprintf(stderr,"  -disable-numlock-check                  Disable NumLock check (Windows version only)\n");
+#if defined(WIN32) || (defined(LINUX) && C_X11 && defined(C_X11_XCB))
+            fprintf(stderr,"  -disable-numlock-check                  Disable NumLock check\n");
 #endif
             fprintf(stderr,"  -date-host-forced                       Force synchronization of date with host\n");
 #if C_DEBUG
@@ -7498,12 +7576,6 @@ bool VM_PowerOn() {
     return true;
 }
 
-#if defined(LINUX) && C_X11
-# include <X11/Xlib.h>
-# include <X11/Xatom.h>
-# include "SDL_syswm.h"
-#endif
-
 #if !defined(C_EMSCRIPTEN)
 void update_capture_fmt_menu(void);
 #endif
@@ -7764,9 +7836,9 @@ int main(int argc, char* argv[]) SDL_MAIN_NOEXCEPT {
     LOG::EarlyInit();
 
     /* -- Init the configuration system and add default values */
-    CheckNumLockState();
-    CheckCapsLockState();
-    CheckScrollLockState();
+    CheckNumLockState(&startup_state_numlock);
+    CheckCapsLockState(&startup_state_capslock);
+    CheckScrollLockState(&startup_state_scrlock);
 
     /* -- setup the config sections for config parsing */
     SDL_SetupConfigSection();
@@ -8262,7 +8334,7 @@ int main(int argc, char* argv[]) SDL_MAIN_NOEXCEPT {
         if(!control->configfiles.size()) {
             Cross::CreatePlatformConfigDir(config_path);
             control->PrintConfig(config_combined.c_str());
-            control->ParseConfigFile(config_combined.c_str()); // Load the conf file created above 
+            control->ParseConfigFile(config_combined.c_str()); // Load the conf file created above
             if(control->configfiles.size()) LOG_MSG("CONFIG: Created and loaded user config file %s", config_combined.c_str());
         }
 
