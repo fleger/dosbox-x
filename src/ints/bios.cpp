@@ -1584,7 +1584,7 @@ static IO_WriteHandler* dosbox_integration_cb_port_w(IO_CalloutObject &co,Bitu p
 	return dosbox_integration_cb_ports_w[port&3];
 }
 
-/* if mem_systems 0 then size_extended is reported as the real size else 
+/* if mem_systems 0 then size_extended is reported as the real size else
  * zero is reported. ems and xms can increase or decrease the other_memsystems
  * counter using the BIOS_ZeroExtendedSize call */
 static uint16_t size_extended;
@@ -1825,7 +1825,7 @@ void ISAPnPDevice::wakecsn(Bitu val) {
 void ISAPnPDevice::select_logical_device(Bitu val) {
     (void)val;
 }
-    
+
 void ISAPnPDevice::checksum_ident() {
     unsigned char checksum = 0x6a,bit;
 
@@ -1977,7 +1977,7 @@ static Bitu isapnp_read_port(Bitu port,Bitu /*iolen*/) {
         case 0x04:  /* read resource data */
                if (ISA_PNP_selected) {
                    if (ISA_PNP_selected->resource_ident < 9)
-                       ret = ISA_PNP_selected->ident[ISA_PNP_selected->resource_ident++];              
+                       ret = ISA_PNP_selected->ident[ISA_PNP_selected->resource_ident++];
                    else {
                        /* real-world hardware testing shows that devices act as if there was some fixed block of ROM,
                         * that repeats every 128, 256, 512, or 1024 bytes if you just blindly read from this port. */
@@ -2579,7 +2579,7 @@ bool ISAPNP_RegisterSysDev(const unsigned char *raw,Bitu len,bool already) {
     ISAPNP_SysDevNodes[ISAPNP_SysDevNodeCount] = new ISAPNP_SysDevNode(raw,len,already);
     if (ISAPNP_SysDevNodes[ISAPNP_SysDevNodeCount] == NULL)
         return false;
-    
+
     ISAPNP_SysDevNodeCount++;
     if (ISAPNP_SysDevNodeLargest < (len+3))
         ISAPNP_SysDevNodeLargest = len+3;
@@ -2640,7 +2640,7 @@ static Bitu ISAPNP_Handler(bool protmode /* called from protected mode interface
      * Don't forget in the real-mode world:
      *    sizeof(int) == 16 bits
      *    sizeof(long) == 32 bits
-     */    
+     */
     switch (func) {
         case 0: {       /* Get Number of System Nodes */
             /* int __cdecl FAR (*entrypoint)(int Function,unsigned char FAR *NumNodes,unsigned int FAR *NodeSize,unsigned int BiosSelector);
@@ -2799,7 +2799,7 @@ static Bitu INT70_Handler(void) {
             IO_Write(0x70,0xb);
             IO_Write(0x71,IO_Read(0x71)&~0x40);
         }
-    } 
+    }
     /* Signal EOI to both pics */
     IO_Write(0xa0,0x20);
     IO_Write(0x20,0x20);
@@ -3286,7 +3286,7 @@ static Bitu INT1A_Handler(void) {
         LOG(LOG_BIOS,LOG_ERROR)("INT1A:Undefined call %2X",reg_ah);
     }
     return CBRET_NONE;
-}   
+}
 
 bool INT16_get_key(uint16_t &code);
 bool INT16_peek_key(uint16_t &code);
@@ -4637,7 +4637,7 @@ static Bitu INT18_PC98_Handler(void) {
 #if defined(USE_TTF)
             if (!pc98_gdc[GDC_MASTER].display_enable) ttf_switch_off(false);
 #endif
- 
+
             {
                 unsigned char b = mem_readb(0x54C/*MEMB_PRXCRT*/);
                 mem_writeb(0x54C/*MEMB_PRXCRT*/,b | 0x80);
@@ -6087,7 +6087,7 @@ Table            [Programmable key setting data buffer structure]
                 /* VF1-VF5 */
                 for (unsigned int f=0;f < 5;f++,ofs += 16)
                     INTDC_STORE_FUNCDEC(ofs,pc98_vfunc_key_ctrl[f]);
- 
+
                 goto done;
             }
             goto unknown;
@@ -6126,7 +6126,7 @@ Table            [Programmable key setting data buffer structure]
                 /* Shift+VF1 - Shift+VF5 */
                 for (unsigned int f=0;f < 5;f++,ofs += 16)
                     INTDC_LOAD_FUNCDEC(pc98_vfunc_key_ctrl[f],ofs);
- 
+
                 update_pc98_function_row(pc98_function_row_mode,true);
                 goto done;
             }
@@ -6435,7 +6435,7 @@ static Bitu INT11_Handler(void) {
     reg_ax=mem_readw(BIOS_CONFIGURATION);
     return CBRET_NONE;
 }
-/* 
+/*
  * Define the following define to 1 if you want dosbox-x to check
  * the system time every 5 seconds and adjust 1/2 a second to sync them.
  */
@@ -6449,7 +6449,7 @@ uint32_t BIOS_HostTimeSync(uint32_t /*ticks*/) {
 #if defined(DB_HAVE_CLOCK_GETTIME) && ! defined(WIN32)
     struct timespec tp;
     clock_gettime(CLOCK_REALTIME,&tp);
-	
+
     struct tm *loctime;
     loctime = localtime(&tp.tv_sec);
     milli = (uint32_t) (tp.tv_nsec / 1000000);
@@ -6457,7 +6457,7 @@ uint32_t BIOS_HostTimeSync(uint32_t /*ticks*/) {
     /* Setup time and date */
     struct timeb timebuffer;
     ftime(&timebuffer);
-    
+
     const struct tm *loctime;
     loctime = localtime (&timebuffer.time);
     milli = (uint32_t) timebuffer.millitm;
@@ -6742,7 +6742,7 @@ static Bitu INT4B_Handler(void) {
     else {
         LOG(LOG_MISC,LOG_DEBUG)("Guest OS attempted unknown INT 4Bh call AX=%04x",reg_ax);
     }
-    
+
     /* Oh, I'm just a BIOS that doesn't know what the hell you're doing. CF=1 */
     CALLBACK_SCF(true);
     return CBRET_NONE;
@@ -6754,7 +6754,7 @@ static Bitu INT14_Handler(void) {
         LOG_MSG("BIOS INT14: Unhandled call AH=%2X DX=%4x",reg_ah,reg_dx);
         return CBRET_NONE;
     }
-    
+
     uint16_t port = real_readw(0x40,reg_dx * 2u); // DX is always port number
     uint8_t timeout = mem_readb((PhysPt)((unsigned int)BIOS_COM1_TIMEOUT + (unsigned int)reg_dx));
     if (port==0)    {
@@ -6772,7 +6772,7 @@ static Bitu INT14_Handler(void) {
         Bitu baudrate = 9600u;
         uint16_t baudresult;
         Bitu rawbaud=(Bitu)reg_al>>5u;
-        
+
         if (rawbaud==0){ baudrate=110u;}
         else if (rawbaud==1){ baudrate=150u;}
         else if (rawbaud==2){ baudrate=300u;}
@@ -6790,7 +6790,7 @@ static Bitu INT14_Handler(void) {
 
         // set line parameters, disable divider access
         IO_WriteB(port+3u, reg_al&0x1Fu); // LCR
-        
+
         // disable interrupts
         IO_WriteB(port+1u, 0u); // IER
 
@@ -7012,7 +7012,7 @@ static Bitu INT15_Handler(void) {
                 reg_cx = (uint16_t)(JOYSTICK_GetMove_X(1)*127+128);
                 reg_dx = (uint16_t)(JOYSTICK_GetMove_Y(1)*127+128);
                 CALLBACK_SCF(false);
-            } else {            
+            } else {
                 reg_ax = reg_bx = reg_cx = reg_dx = 0;
                 CALLBACK_SCF(true);
             }
@@ -7090,7 +7090,7 @@ static Bitu INT15_Handler(void) {
             Segs.limit[ss] = 0xFFFF;
             CALLBACK_SCF(false);
             break;
-        }   
+        }
     case 0x88:  /* SYSTEM - GET EXTENDED MEMORY SIZE (286+) */
         /* This uses the 16-bit value read back from CMOS which is capped at 64MB */
         reg_ax=other_memsystems?0:size_extended;
@@ -7279,7 +7279,7 @@ static Bitu INT15_Handler(void) {
                     else if ((reg_bh==0x01) || (reg_bh==0x02)) { /* set scaling */
                         KEYBOARD_AUX_Write(0xE6u+reg_bh-1u); /* 0xE6 1:1   or 0xE7 2:1 */
                         KEYBOARD_ClrBuffer();
-                        CALLBACK_SCF(false); 
+                        CALLBACK_SCF(false);
                         reg_ah=0;
                     } else {
                         CALLBACK_SCF(true);
@@ -7344,12 +7344,12 @@ static Bitu INT15_Handler(void) {
                     if(!APMBIOS_allow_realmode) {
                         LOG_MSG("APM BIOS: OS attempted real-mode connection, which is disabled in your dosbox-x.conf\n");
                         reg_ah = 0x86;  // APM not present
-                        CALLBACK_SCF(true);         
+                        CALLBACK_SCF(true);
                         break;
                     }
                     if(reg_bx != 0x0) {
                         reg_ah = 0x09;  // unrecognized device ID
-                        CALLBACK_SCF(true);         
+                        CALLBACK_SCF(true);
                         break;
                     }
                     if(!apm_realmode_connected) { // not yet connected
@@ -7363,7 +7363,7 @@ static Bitu INT15_Handler(void) {
                     } else {
                         LOG_MSG("APM BIOS: OS attempted to connect to real-mode interface when already connected\n");
                         reg_ah = APMBIOS_connected_already_err(); // interface connection already in effect
-                        CALLBACK_SCF(true);         
+                        CALLBACK_SCF(true);
                     }
                     APM_BIOS_connected_minor_version = 0;
                     break;
@@ -7371,12 +7371,12 @@ static Bitu INT15_Handler(void) {
                     if(!APMBIOS_allow_prot16) {
                         LOG_MSG("APM BIOS: OS attempted 16-bit protected mode connection, which is disabled in your dosbox-x.conf\n");
                         reg_ah = 0x06;  // not supported
-                        CALLBACK_SCF(true);         
+                        CALLBACK_SCF(true);
                         break;
                     }
                     if(reg_bx != 0x0) {
                         reg_ah = 0x09;  // unrecognized device ID
-                        CALLBACK_SCF(true);         
+                        CALLBACK_SCF(true);
                         break;
                     }
                     if(!apm_realmode_connected) { // not yet connected
@@ -7398,7 +7398,7 @@ static Bitu INT15_Handler(void) {
                     } else {
                         LOG_MSG("APM BIOS: OS attempted to connect to 16-bit protected mode interface when already connected\n");
                         reg_ah = APMBIOS_connected_already_err(); // interface connection already in effect
-                        CALLBACK_SCF(true);         
+                        CALLBACK_SCF(true);
                     }
                     APM_BIOS_connected_minor_version = 0;
                     break;
@@ -7408,12 +7408,12 @@ static Bitu INT15_Handler(void) {
                     if(!APMBIOS_allow_prot32) {
                         LOG_MSG("APM BIOS: OS attempted 32-bit protected mode connection, which is disabled in your dosbox-x.conf\n");
                         reg_ah = 0x08;  // not supported
-                        CALLBACK_SCF(true);         
+                        CALLBACK_SCF(true);
                         break;
                     }
                     if(reg_bx != 0x0) {
                         reg_ah = 0x09;  // unrecognized device ID
-                        CALLBACK_SCF(true);         
+                        CALLBACK_SCF(true);
                         break;
                     }
                     if(!apm_realmode_connected) { // not yet connected
@@ -7436,14 +7436,14 @@ static Bitu INT15_Handler(void) {
                     } else {
                         LOG_MSG("APM BIOS: OS attempted to connect to 32-bit protected mode interface when already connected\n");
                         reg_ah = APMBIOS_connected_already_err(); // interface connection already in effect
-                        CALLBACK_SCF(true);         
+                        CALLBACK_SCF(true);
                     }
                     APM_BIOS_connected_minor_version = 0;
                     break;
                 case 0x04: // DISCONNECT INTERFACE
                     if(reg_bx != 0x0) {
                         reg_ah = 0x09;  // unrecognized device ID
-                        CALLBACK_SCF(true);         
+                        CALLBACK_SCF(true);
                         break;
                     }
                     if(apm_realmode_connected) {
@@ -7452,7 +7452,7 @@ static Bitu INT15_Handler(void) {
                         apm_realmode_connected=false;
                     } else {
                         reg_ah = 0x03;  // interface not connected
-                        CALLBACK_SCF(true);         
+                        CALLBACK_SCF(true);
                     }
                     APM_BIOS_connected_minor_version = 0;
                     break;
@@ -7503,7 +7503,7 @@ static Bitu INT15_Handler(void) {
                 case 0x07:
                     if(reg_bx != 0x1) {
                         reg_ah = 0x09;  // wrong device ID
-                        CALLBACK_SCF(true);         
+                        CALLBACK_SCF(true);
                         break;
                     }
                     if(!apm_realmode_connected) {
@@ -7547,7 +7547,7 @@ static Bitu INT15_Handler(void) {
                 case 0x08: // ENABLE/DISABLE POWER MANAGEMENT
                     if(reg_bx != 0x0 && reg_bx != 0x1) {
                         reg_ah = 0x09;  // unrecognized device ID
-                        CALLBACK_SCF(true);         
+                        CALLBACK_SCF(true);
                         break;
                     } else if(!apm_realmode_connected) {
                         reg_ah = 0x03;
@@ -7569,7 +7569,7 @@ static Bitu INT15_Handler(void) {
                     }
                     if (reg_bx != 0x0001 && reg_bx != 0x8001) {
                         reg_ah = 0x09;  // unrecognized device ID
-                        CALLBACK_SCF(true);         
+                        CALLBACK_SCF(true);
                         break;
                     }
                     /* FIXME: Allow configuration and shell commands to dictate whether or
@@ -7678,7 +7678,7 @@ static Bitu INT15_Handler(void) {
                 case 0x0f:
                     if(reg_bx != 0x0 && reg_bx != 0x1) {
                         reg_ah = 0x09;  // unrecognized device ID
-                        CALLBACK_SCF(true);         
+                        CALLBACK_SCF(true);
                         break;
                     } else if(!apm_realmode_connected) {
                         reg_ah = 0x03;
@@ -7924,7 +7924,7 @@ static Bitu Default_IRQ_Handler(void) {
         if (slave_isr) isr = slave_isr << 8;
         while (isr >>= 1) irq++;
         LOG(LOG_BIOS, LOG_WARN)("Unexpected IRQ %u", irq);
-#endif 
+#endif
     }
     else master_isr = 0xff;
     mem_writeb(BIOS_LAST_UNEXPECTED_IRQ, master_isr);
@@ -7971,7 +7971,7 @@ void bios_enable_ps2() {
 }
 
 void BIOS_ZeroExtendedSize(bool in) {
-    if(in) other_memsystems++; 
+    if(in) other_memsystems++;
     else other_memsystems--;
     if(other_memsystems < 0) other_memsystems=0;
 
@@ -8475,7 +8475,7 @@ void gdc_grcg_enable_update_vars(void) {
     b &= ~0x02;
     if (enable_pc98_grcg) b |= 0x02;
     mem_writeb(0x54C,b);
-    
+
     //TODO: How to reset GRCG?
 }
 
@@ -10620,7 +10620,7 @@ private:
             /* Setup equipment list */
             // look http://www.bioscentral.com/misc/bda.htm
 
-            //uint16_t config=0x4400; //1 Floppy, 2 serial and 1 parallel 
+            //uint16_t config=0x4400; //1 Floppy, 2 serial and 1 parallel
             uint16_t config = 0x0;
 
             config |= bios_post_parport_count() << 14;
@@ -12336,7 +12336,7 @@ public:
 
         /* INT 1C System Timer tick called from INT 8 */
         callback[7].Install(&INT1C_Handler,CB_IRET,"Int 1c Timer");
-        
+
         /* IRQ 8 RTC Handler */
         callback[8].Install(&INT70_Handler,CB_IRET,"Int 70 RTC");
 
@@ -13000,7 +13000,7 @@ void ROMBIOS_Init() {
         if (ROMBIOS_GetMemory(sizeof(pc98_epson_check_2),"PC-98 unknown data / Epson check",1,0xF5200 + 0x018E) == 0)
             LOG_MSG("WARNING: Was not able to mark off E800:0DD8 off-limits for PC-98 copyright string");
     }
- 
+
     /* some structures when enabled are fixed no matter what */
     if (rom_bios_8x8_cga_font && !IS_PC98_ARCH) {
         /* line 139, int10_memory.cpp: the 8x8 font at 0xF000:FA6E, first 128 chars.
@@ -13117,9 +13117,6 @@ void ROMBIOS_Init() {
     }
 }
 
-//! \brief Updates the state of a lockable key.
-void UpdateKeyWithLed(int nVirtKey, int flagAct, int flagLed);
-
 bool IsSafeToMemIOOnBehalfOfGuest()
 {
     if(cpu.pmode) return false; // protected mode (including virtual 8086 mode): NO
@@ -13127,40 +13124,15 @@ bool IsSafeToMemIOOnBehalfOfGuest()
     return true;
 }
 
-void BIOS_SynchronizeNumLock()
-{
-#if defined(WIN32)
-	UpdateKeyWithLed(VK_NUMLOCK, BIOS_KEYBOARD_FLAGS1_NUMLOCK_ACTIVE, BIOS_KEYBOARD_LEDS_NUM_LOCK);
-#endif
-}
-
-void BIOS_SynchronizeCapsLock()
-{
-#if defined(WIN32)
-	UpdateKeyWithLed(VK_CAPITAL, BIOS_KEYBOARD_FLAGS1_CAPS_LOCK_ACTIVE, BIOS_KEYBOARD_LEDS_CAPS_LOCK);
-#endif
-}
-
-void BIOS_SynchronizeScrollLock()
-{
-#if defined(WIN32)
-	UpdateKeyWithLed(VK_SCROLL, BIOS_KEYBOARD_FLAGS1_SCROLL_LOCK_ACTIVE, BIOS_KEYBOARD_LEDS_SCROLL_LOCK);
-#endif
-}
-
-void UpdateKeyWithLed(int nVirtKey, int flagAct, int flagLed)
-{
-#if defined(WIN32)
-
-	const auto state = GetKeyState(nVirtKey);
-
+//! \brief Updates the state of a lockable key.
+void UpdateLockableKey(int flagAct, int flagLed, bool enabled) {
 	const auto flags1 = BIOS_KEYBOARD_FLAGS1;
 	const auto flags2 = BIOS_KEYBOARD_LEDS;
 
 	auto flag1 = mem_readb(flags1);
 	auto flag2 = mem_readb(flags2);
 
-	if (state & 1)
+	if (enabled)
 	{
 		flag1 |= flagAct;
 		flag2 |= flagLed;
@@ -13173,13 +13145,20 @@ void UpdateKeyWithLed(int nVirtKey, int flagAct, int flagLed)
 
 	mem_writeb(flags1, flag1);
 	mem_writeb(flags2, flag2);
+}
 
-#else
+void BIOS_UpdateNumLock(bool enabled)
+{
+    UpdateLockableKey(BIOS_KEYBOARD_FLAGS1_NUMLOCK_ACTIVE, BIOS_KEYBOARD_LEDS_NUM_LOCK, enabled);
+}
 
-    (void)nVirtKey;
-    (void)flagAct;
-    (void)flagLed;
+void BIOS_UpdateCapsLock(bool enabled)
+{
+    UpdateLockableKey(BIOS_KEYBOARD_FLAGS1_CAPS_LOCK_ACTIVE, BIOS_KEYBOARD_LEDS_CAPS_LOCK, enabled);
+}
 
-#endif
+void BIOS_UpdateScrollLock(bool enabled)
+{
+    UpdateLockableKey(BIOS_KEYBOARD_FLAGS1_SCROLL_LOCK_ACTIVE, BIOS_KEYBOARD_LEDS_SCROLL_LOCK, enabled);
 }
 

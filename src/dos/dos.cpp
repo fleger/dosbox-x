@@ -3044,13 +3044,13 @@ static Bitu DOS_21Handler(void) {
 			    break;
 		    case 0x4e:              /* LFN FindFirst */
 			    DOS_Int21_714e(name1, name2);
-			    break;           
+			    break;
 		    case 0x4f:              /* LFN FindNext */
 			    DOS_Int21_714f(name1, name2);
 			    break;
 		    case 0x56:              /* LFN Rename */
 			    DOS_Int21_7156(name1, name2);
-			    break;         
+			    break;
 		    case 0x60:              /* LFN GetName */
 			    DOS_Int21_7160(name1, name2);
 			    break;
@@ -3465,7 +3465,7 @@ static Bitu DOS_25Handler(void) {
 
 static Bitu DOS_26Handler_Actual(bool fat32) {
 #if !defined(OSFREE)
-	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->isRemovable()) {	
+	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->isRemovable()) {
 		reg_ax = 0x8002;
 		SETFLAGBIT(CF,true);
 	} else if (strncmp(Drives[reg_al]->GetInfo(),"fatDrive",8) == 0) {
@@ -4245,11 +4245,9 @@ public:
 				dos.breakcheck=true;
 			else if (!strcasecmp(dosbreak, "off"))
 				dos.breakcheck=false;
-# if defined(WIN32)
 			const char *numlock = config_section->Get_string("numlock");
 			if ((!strcasecmp(numlock, "off")&&startup_state_numlock) || (!strcasecmp(numlock, "on")&&!startup_state_numlock))
 				SetNumLock();
-# endif
 		}
 #endif
 		LOG(LOG_MISC,LOG_DEBUG)("files=%u fcbs=%u",(unsigned int)DOS_FILES,(unsigned int)maxfcb);
